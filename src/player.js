@@ -19,26 +19,24 @@ function Player(position) {
   this.width  = 64;
   this.height = 64;
   this.spritesheet  = new Image();
-  this.spritesheet.src = encodeURI('assets/PlayerSprite1.png');
+  this.spritesheet.src = encodeURI('assets/PlayerSprite3.png');
   this.timer = 0;
   this.frame = 0;
-  this.locked = 0;
-
-  this.animation = 0;
+  this.lock = 0;
 
   var self = this;
   window.onkeydown = function (event) {
       switch (event.keyCode) {
-          case 38:
-          case 87://up
-              if (self.y > 15 && (self.state == "idle" || self.sate == "break")) self.y -= 25
+          // UP
+		  case 87, 38:
+              if (self.y > 15 && (self.state == "idle" || self.sate == "wait")) self.y -= 25
               break;
-          case 40:
-          case 83://down
-              if (self.y < 350 && (self.state == "idle" || self.sate == "break")) self.y += 25;
+          // DOWN
+          case 83, 40:
+              if (self.y < 350 && (self.state == "idle" || self.sate == "wait")) self.y += 25;
               break;
-          case 39:
-          case 68://right
+          // RIGHT
+          case 68, 39:
               if (self.state == "idle") {
                   self.state = "jumping";
                   self.frame = 0;
@@ -57,7 +55,7 @@ Player.prototype.kill = function(){
 }
 
 Player.prototype.lock = function(){
-	this.state = "locked";
+	this.state = "lock";
 }
 
 Player.prototype.reset = function(){
@@ -80,11 +78,7 @@ Player.prototype.update = function(time) {
                 this.frame += 1;
                 if (this.frame > 3) {
                     this.frame = 3;
-                    this.animation++;//adding pause to blinking
-                    if (this.animation > 20) {
-                        this.frame = 0;
-                        this.animation = 0;
-                    }
+                    
                 }
             }
             break;
@@ -101,14 +95,14 @@ Player.prototype.update = function(time) {
                         break;
                     case 4:
                         this.frame = 3;
-                        this.state = "break";
+                        this.state = "wait";
                     case 3:
                         this.y += 10;
                         break;
                 }
             }
             break;
-        case "break"://used to avoid fast jump
+        case "wait":
             if (this.timer > MS_PER_FRAME/3) {
                 this.timer = 0;
                 if (this.x > 700) this.state = "won";
@@ -128,24 +122,20 @@ Player.prototype.update = function(time) {
 				this.state = "idle";
             }
             break;
-		case "locked":
-			if  (this.locked > 10){
+		case "lock":
+			if  (this.lock > 10){
 				this.y = 230;
 				this.x = 0;
 				this.state = "idle";
-				this.locked = 0;
+				this.lock = 0;
 			}
 			if (this.timer > MS_PER_FRAME) {
                 this.timer = 0;
-				this.locked++;
+				this.lock++;
                 this.frame += 1;
                 if (this.frame > 3) {
                     this.frame = 3;
-                    this.animation++;//adding pause to blinking
-                    if (this.animation > 20) {
-                        this.frame = 0;
-                        this.animation = 0;
-                    }
+                    
                 }
             }
 			break;
@@ -161,9 +151,9 @@ Player.prototype.render = function(time, ctx) {
   switch(this.state) {
       // TODO: Implement your player's redering according to state
       case "idle":
-      case "break":
+      case "wait":
       case "won":
-	  case "locked":
+	  case "lock":
       ctx.drawImage(
         // image
         this.spritesheet,
