@@ -19,7 +19,7 @@ function Player(position) {
   this.width  = 64;
   this.height = 64;
   this.spritesheet  = new Image();
-  this.spritesheet.src = encodeURI('assets/PlayerSprite3.png');
+  this.spritesheet.src = encodeURI('assets/PlayerSprite0.png');
   this.timer = 0;
   this.frame = 0;
   this.lock = 0;
@@ -29,11 +29,22 @@ function Player(position) {
       switch (event.keyCode) {
           // UP
 		  case 87, 38:
-              if (self.y > 15 && (self.state == "idle" || self.sate == "wait")) self.y -= 25
+              if (self.y < 350 && (self.state == "idle" || self.sate == "wait")){
+				 if (self.state == "idle") {
+                  self.state = "upjump";
+                  self.frame = 0;
+              } 
+			  } self.y -= 15;
               break;
           // DOWN
           case 83, 40:
-              if (self.y < 350 && (self.state == "idle" || self.sate == "wait")) self.y += 25;
+              if (self.y < 350 && (self.state == "idle" || self.sate == "wait")){
+				 if (self.state == "idle") {
+                  self.state = "downjump";
+                  self.frame = 0;
+              } 
+			  } self.y += 15;
+			  
               break;
           // RIGHT
           case 68, 39:
@@ -54,6 +65,7 @@ Player.prototype.kill = function(){
 	this.state = "dead";
 }
 
+// Prevents frog from sliding out of bounds on log.
 Player.prototype.lock = function(){
 	this.state = "lock";
 }
@@ -77,12 +89,10 @@ Player.prototype.update = function(time) {
                 this.timer = 0;
                 this.frame += 1;
                 if (this.frame > 3) {
-                    this.frame = 3;
-                    
+                    this.frame = 0;
                 }
             }
             break;
-            // TODO: Implement your player's update by state
         case "jumping":
             if (this.timer > MS_PER_FRAME/2) {
                 this.timer = 0;
@@ -139,6 +149,44 @@ Player.prototype.update = function(time) {
                 }
             }
 			break;
+		case "downjump":
+			if (this.timer > MS_PER_FRAME/2) {
+                this.timer = 0;
+                this.y += 8;
+                this.frame += 1;
+                switch (this.frame) {
+                    case 1:
+                    case 2:
+                        this.y -= 10;
+                        break;
+                    case 4:
+                        this.frame = 3;
+                        this.state = "wait";
+                    case 3:
+                        this.y += 10;
+                        break;
+                }
+            }
+            break;
+		case "upjump":
+			if (this.timer > MS_PER_FRAME/2) {
+                this.timer = 0;
+                this.y -= 8;
+                this.frame += 1;
+                switch (this.frame) {
+                    case 1:
+                    case 2:
+                        this.y -= 10;
+                        break;
+                    case 4:
+                        this.frame = 3;
+                        this.state = "wait";
+                    case 3:
+                        this.y += 10;
+                        break;
+                }
+            }
+            break;
     }
 }
 
@@ -149,30 +197,40 @@ Player.prototype.update = function(time) {
  */
 Player.prototype.render = function(time, ctx) {
   switch(this.state) {
-      // TODO: Implement your player's redering according to state
       case "idle":
+		  ctx.drawImage(
+			// image
+			this.spritesheet,
+			// source rectangle
+			this.frame * 64, 64, this.width, this.height,
+			// destination rectangle
+			this.x, this.y, this.width, this.height
+		  );
+	  break;
       case "wait":
       case "won":
 	  case "lock":
-      ctx.drawImage(
-        // image
-        this.spritesheet,
-        // source rectangle
-        this.frame * 64, 64, this.width, this.height,
-        // destination rectangle
-        this.x, this.y, this.width, this.height
-      );
+		  ctx.drawImage(
+			// image
+			this.spritesheet,
+			// source rectangle
+			this.frame * 64, 64, this.width, this.height,
+			// destination rectangle
+			this.x, this.y, this.width, this.height
+		  );
       break;
+	  case "upjump":
+	  case "downjump":
       case "jumping":
-        ctx.drawImage(
-        // image
-        this.spritesheet,
-        // source rectangle
-        this.frame * 64, 0, this.width, this.height,
-        // destination rectangle
-        this.x, this.y, this.width, this.height
-		);
-          break;
+          ctx.drawImage(
+			// image
+			this.spritesheet,
+			// source rectangle
+			this.frame * 64, 0, this.width, this.height,
+			// destination rectangle
+			this.x, this.y, this.width, this.height
+		  );
+      break;
 	  case "dead":
         ctx.drawImage(
         // image
